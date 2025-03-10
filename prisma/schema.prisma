@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SequenceType {
+  EFFORT
+  REST
+}
+
+model User {
+  id       String   @id @default(uuid())
+  username String   @unique
+  password String
+  climber  Climber?
+
+  @@map("user")
+}
+
+model Climber {
+  id            String     @id @default(uuid())
+  userId        String     @unique @map("user_id")
+  alias         String?
+  age           Int?
+  gender        String?
+  height        Float?
+  span          Float?
+  routeGrade    String?    @map("route_grade")
+  boulderGrade  String?    @map("boulder_grade")
+  user          User       @relation(fields: [userId], references: [id])
+  workouts      Workout[]
+
+  @@map("climber")
+}
+
+model WorkoutType {
+  name                 String                @id
+  description          String?
+  workouts             Workout[]
+  workoutTypeSequences WorkoutTypeSequence[]
+
+  @@map("workout_type")
+}
+
+model WorkoutTypeSequence {
+  workoutName   String       @map("workout_name")
+  sequence      Int          @map("sequence")
+  sequenceType  SequenceType @map("sequence_type")
+  duration      Int
+  instruction   String?
+  workoutType   WorkoutType  @relation(fields: [workoutName], references: [name])
+
+  @@id([workoutName, sequence])
+  @@map("workout_type_sequence")
+}
+
+model Workout {
+  id              String        @id @default(uuid())
+  workoutName     String        @map("workout_name")
+  climberId       String        @map("climber_id")
+  bodyWeight      Float?        @map("body_weight")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  climber         Climber       @relation(fields: [climberId], references: [id])
+  workoutType     WorkoutType   @relation(fields: [workoutName], references: [name])
+  measurements    Measurement[]
+
+  @@map("workout")
+}
+
+model MeasurementDevice {
+  id           String        @id @default(uuid())
+  measurements Measurement[]
+  calibrations Calibration[]
+
+  @@map("measurement_device")
+}
+
+model Calibration {
+  deviceId    String            @map("device_id")
+  session     Int
+  weightKg    Float             @map("weight_kg")
+  sensorValue Float             @map("sensor_value")
+  timestamp   DateTime
+  device      MeasurementDevice @relation(fields: [deviceId], references: [id])
+
+  @@id([deviceId, session])
+  @@map("calibration")
+}
+
+model Measurement {
+  id                 String               @id @default(uuid())
+  workoutId          String               @map("workout_id")
+  sequence           Int
+  sequenceType       SequenceType         @map("sequence_type")
+  duration           Int
+  measurementDeviceId String?             @map("measurement_device_id")
+  currentRepetition  Int                  @map("current_repetition")
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  workout            Workout              @relation(fields: [workoutId], references: [id])
+  measurementDevice  MeasurementDevice?   @relation(fields: [measurementDeviceId], references: [id])
+  measuredData       MeasuredData[]
+  maxIsoFS           MaxIsoFingerStrength?
+  criticalForce      CriticalForceWorkout?
+
+  @@map("measurement")
+}
+
+model MeasuredData {
+  measurementId String      @map("measurement_id")
+  iteration     Int
+  weight        Float
+  measurement   Measurement @relation(fields: [measurementId], references: [id])
+
+  @@id([measurementId, iteration])
+  @@map("measured_data")
+}
+
+model MaxIsoFingerStrength {
+  id            String      @id @default(uuid())
+  measurementId String      @unique @map("measurement_id")
+  maxForce      Float       @map("max_force")
+  measurement   Measurement @relation(fields: [measurementId], references: [id])
+
+  @@map("max_iso_finger_strength_workout")
+}
+
+model CriticalForceWorkout {
+  id            String      @id @default(uuid())
+  measurementId String      @unique @map("measurement_id")
+  criticalForce Float       @map("critical_force")
+  wPrime        Float       @map("w_prime")
+  maxForce      Float       @map("max_force")
+  measurement   Measurement @relation(fields: [measurementId], references: [id])
+
+  @@map("critical_force_workout")
+}
