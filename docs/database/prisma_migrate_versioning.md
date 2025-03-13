@@ -1,5 +1,7 @@
 ### Set Up Prisma Client in Your Next.js Project
+
 Create a file lib/prisma.ts to ensure you use a single instance of Prisma client:
+
 ```typescript
 import { PrismaClient } from '@prisma/client';
 
@@ -17,19 +19,23 @@ if (process.env.NODE_ENV === 'development') {
 export default prisma;
 ```
 
-### Schema Versioning: 
+### Schema Versioning:
+
 Prisma Migrate automatically handles your schema versioning:
 
 Each migration is saved in prisma/migrations/
 Migrations are tracked in Git, providing version control
-To apply migrations in production: 
+To apply migrations in production:
+
 ```bash
 npx prisma migrate deploy
 ```
 
-### Database Seeding: 
+### Database Seeding:
+
 You can create seed data for development:
 Create a file prisma/seed.ts:
+
 ```typescript
 import { PrismaClient } from '@prisma/client';
 import { SequenceType } from '@prisma/client';
@@ -91,7 +97,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error(e);
     process.exit(1);
   })
@@ -101,6 +107,7 @@ main()
 ```
 
 ### Add the seed script to your package.json:
+
 ```json
 "prisma": {
 "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -108,6 +115,7 @@ main()
 ```
 
 ### Run the seed:
+
 ```bash
 npm install -D ts-node typescript @types/node
 npx prisma db seed

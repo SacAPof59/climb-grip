@@ -88,16 +88,19 @@ sudo nano /etc/postgresql/*/main/postgresql.conf
 ```
 
 Change the listen_addresses line to:
+
 ```
 listen_addresses = '*'
 ```
 
 Then edit the client authentication configuration:
+
 ```bash
 sudo nano /etc/postgresql/*/main/pg_hba.conf
 ```
 
 Add this line to allow connections from your application:
+
 ```
 host    nextapp_db    nextapp    0.0.0.0/0    md5
 ```
