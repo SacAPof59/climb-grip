@@ -1,43 +1,61 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 import Link from "next/link";
-import {AuthProvider} from "@/components/AuthProvider";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
-import {redirect} from "next/navigation";
+import LoginButton from "./components/LoginButton";
 
-async function signOut() {
-    "use server";
-    //This will use the built-in signout route of next-auth to signout the user
-    //No need to use next-auth/react here
-    await fetch(`${process.env.NEXTAUTH_URL}/api/auth/signout`, {
-        method: "POST",
-    });
-    redirect("/");
-}
-
-export default async function Home() {
+export default async function HomePage() {
     const session = await getServerSession(authOptions);
 
     return (
-        <div
-            className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-            <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-                <AuthProvider>
+        <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white p-6">
+            <div className="w-full max-w-2xl rounded-xl bg-white p-8 shadow-lg">
+                <h1 className="mb-6 text-center text-3xl font-bold text-gray-800">
+                    Welcome to My Next.js App
+                </h1>
+
+                <div className="mb-8 text-center">
                     {session ? (
-                        <>
-                            <p>Signed in as {session.user.username}</p>
-                            <form action={signOut}>
-                                <button type="submit">Sign out</button>
-                            </form>
-                        </>
+                        <div className="space-y-2">
+                            <p className="text-xl font-medium">
+                                Hello, <span className="text-blue-600">{session.user?.name}</span>!
+                            </p>
+                            <p className="text-gray-600">
+                                You're signed in with {session.user?.email}
+                            </p>
+                        </div>
                     ) : (
-                        <>
-                            <p>Not signed in</p>
-                            <Link href="/signin">Go to sign in</Link>
-                            <Link href="/create-account">Create an account</Link>
-                        </>
+                        <p className="text-gray-600">
+                            Please sign in to access all features of the application
+                        </p>
                     )}
-                </AuthProvider>
-            </main>
+                </div>
+
+                <div className="mb-8 flex justify-center">
+                    <LoginButton />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <Link
+                        href="/profile"
+                        className="flex items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white transition-colors hover:bg-blue-700"
+                    >
+                        View Profile
+                    </Link>
+
+                    <Link
+                        href="/dashboard"
+                        className="flex items-center justify-center rounded-lg bg-gray-100 px-4 py-3 text-center font-medium text-gray-800 transition-colors hover:bg-gray-200"
+                    >
+                        Dashboard
+                    </Link>
+                </div>
+
+                <div className="mt-8 border-t border-gray-200 pt-6 text-center text-sm text-gray-500">
+                    <p>
+                        Secured with NextAuth.js, Prisma, and Google Authentication
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
