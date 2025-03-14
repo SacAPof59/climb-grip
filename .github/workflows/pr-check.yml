@@ -1,0 +1,80 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    services:
+      # Setup PostgreSQL for Prisma to connect to during build
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file for testing
+        run: |
+          cat > .env << EOL
+          DATABASE_URL="postgresql://test:test@localhost:5432/test_db?schema=public"
+          NEXTAUTH_SECRET="test-secret-for-ci"
+          NEXTAUTH_URL="http://localhost:3000"
+          EOL
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/test_db?schema=public'
+
+      - name: Check formatting with Prettier
+        run: npx prettier --check .
+
+      - name: Lint with ESLint
+        run: npm run lint
+
+      # Only run tests if the script exists in package.json
+      - name: Check if test script exists
+        id: check_test_script
+        run: |
+          if grep -q "\"test\":" package.json; then
+            echo "has_test_script=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_test_script=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No 'test' script found in package.json. Skipping tests."
+          fi
+
+      - name: Run tests
+        if: steps.check_test_script.outputs.has_test_script == 'true'
+        run: npm test
+
+      - name: Build project
+        run: npm run build
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/test_db?schema=public'
+          NEXTAUTH_SECRET: 'test-secret-for-ci'
+          NEXTAUTH_URL: 'http://localhost:3000'
+          NODE_ENV: 'test'
