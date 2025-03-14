@@ -53,7 +53,7 @@ jobs:
           mkdir -p deploy
           
           # Copy necessary files for production
-          cp -r .next package.json package-lock.json prisma next.config.js public deploy/
+          cp -r .next package.json package-lock.json prisma next.config.ts public deploy/
           
           # Copy environment variables file if needed
           # cp .env.production deploy/
