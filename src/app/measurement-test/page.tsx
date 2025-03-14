@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export default function WeightMeasurementPage() {
-    const [device, setDevice] = useState(null);
+    const [device, setDevice] = useState<BluetoothDevice | null>(null);
     const [weight, setWeight] = useState('--');
     const [batteryLevel, setBatteryLevel] = useState('--');
     const [isConnected, setIsConnected] = useState(false);
@@ -36,10 +36,13 @@ export default function WeightMeasurementPage() {
             const weightCharacteristic = await service.getCharacteristic(0x2a9d);
 
             console.log('Subscribing to weight notifications...');
-            weightCharacteristic.addEventListener('characteristicvaluechanged', (event : Event) => {
-                const value = event.target.value;
-                const weightValue = value.getUint16(1, true) / 200; // Adjust based on your device's data format
-                setWeight(weightValue.toFixed(1));
+            weightCharacteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                // Safe casting with type checking
+                const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
+                if (target && target.value) {
+                    const weightValue = target.value.getUint16(1, true) / 200;
+                    setWeight(weightValue.toFixed(1));
+                }
             });
 
             try {
@@ -47,10 +50,13 @@ export default function WeightMeasurementPage() {
                 const batteryCharacteristic = await service.getCharacteristic(0x2a19);
 
                 console.log('Subscribing to battery notifications...');
-                batteryCharacteristic.addEventListener('characteristicvaluechanged', (event : Event) => {
-                    const value = event.target.value;
-                    const battery = value.getUint8(0);
-                    setBatteryLevel(`${battery}%`);
+                batteryCharacteristic.addEventListener('characteristicvaluechanged', (event: Event) => {
+                    // Safe casting with type checking
+                    const target = event.target as unknown as BluetoothRemoteGATTCharacteristic;
+                    if (target && target.value) {
+                        const battery = target.value.getUint8(0);
+                        setBatteryLevel(`${battery}%`);
+                    }
                 });
 
                 await batteryCharacteristic.startNotifications();
@@ -66,7 +72,7 @@ export default function WeightMeasurementPage() {
 
         } catch (error) {
             console.error('Error connecting to device:', error);
-            alert(`Connection failed: ${error.message}`);
+            alert(`Connection failed: ${(error as Error).message}`);
         }
     };
 
