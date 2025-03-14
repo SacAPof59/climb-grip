@@ -36,7 +36,7 @@ export default function WeightMeasurementPage() {
             const weightCharacteristic = await service.getCharacteristic(0x2a9d);
 
             console.log('Subscribing to weight notifications...');
-            weightCharacteristic.addEventListener('characteristicvaluechanged', (event : any) => {
+            weightCharacteristic.addEventListener('characteristicvaluechanged', (event : Event) => {
                 const value = event.target.value;
                 const weightValue = value.getUint16(1, true) / 200; // Adjust based on your device's data format
                 setWeight(weightValue.toFixed(1));
@@ -47,7 +47,7 @@ export default function WeightMeasurementPage() {
                 const batteryCharacteristic = await service.getCharacteristic(0x2a19);
 
                 console.log('Subscribing to battery notifications...');
-                batteryCharacteristic.addEventListener('characteristicvaluechanged', (event : any) => {
+                batteryCharacteristic.addEventListener('characteristicvaluechanged', (event : Event) => {
                     const value = event.target.value;
                     const battery = value.getUint8(0);
                     setBatteryLevel(`${battery}%`);
