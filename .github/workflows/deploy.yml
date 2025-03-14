@@ -59,27 +59,34 @@ jobs:
         run: |
           # Create a temporary directory for deployment files
           mkdir -p deploy
-          
+
           # Copy necessary files for production
           cp -r .next package.json package-lock.json prisma next.config.ts public deploy/
-          
-          # Copy environment variables file if needed
-          # cp .env.production deploy/
-          
+
+          # Create .env file for the VPS
+          cat > deploy/.env << EOL
+          DATABASE_URL="${DATABASE_URL}"
+          NEXTAUTH_SECRET="${NEXTAUTH_SECRET}"
+          NEXTAUTH_URL="${NEXTAUTH_URL}"
+          NODE_ENV=production
+          GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}"
+          GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
+          EOL
+
           # Create deployment script
           cat > deploy/deploy.sh << 'EOL'
           #!/bin/bash
           set -e
-          
+
           # Install dependencies
           npm ci --only=production
-          
+
           # Generate Prisma Client
           npx prisma generate
-          
+
           # Run database migrations
           npx prisma migrate deploy
-          
+
           # Restart the application
           # If using PM2
           if command -v pm2 &> /dev/null; then
@@ -91,15 +98,15 @@ jobs:
             echo "No process manager found. Please set up PM2 or systemd."
             exit 1
           fi
-          
+
           echo "Deployment completed successfully!"
           EOL
-          
+
           # Make the script executable
           chmod +x deploy/deploy.sh
-          
+
           # Copy files to VPS
           rsync -avz --delete deploy/ $VPS_USERNAME@$VPS_HOST:$APP_DIR/
-          
+
           # Execute deployment script on VPS
           ssh $VPS_USERNAME@$VPS_HOST "cd $APP_DIR && ./deploy.sh"
