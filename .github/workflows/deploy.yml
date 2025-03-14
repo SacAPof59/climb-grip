@@ -1,0 +1,97 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: production
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          APP_DIR: ${{ secrets.APP_DIR }}
+        run: |
+          # Create a temporary directory for deployment files
+          mkdir -p deploy
+          
+          # Copy necessary files for production
+          cp -r .next package.json package-lock.json prisma next.config.js public deploy/
+          
+          # Copy environment variables file if needed
+          # cp .env.production deploy/
+          
+          # Create deployment script
+          cat > deploy/deploy.sh << 'EOL'
+          #!/bin/bash
+          set -e
+          
+          # Install dependencies
+          npm ci --only=production
+          
+          # Generate Prisma Client
+          npx prisma generate
+          
+          # Run database migrations
+          npx prisma migrate deploy
+          
+          # Restart the application
+          # If using PM2
+          if command -v pm2 &> /dev/null; then
+            pm2 restart climb-grip || pm2 start npm --name "climb-grip" -- start
+          # If using systemd
+          elif [ -f /etc/systemd/system/climb-grip.service ]; then
+            sudo systemctl restart climb-grip
+          else
+            echo "No process manager found. Please set up PM2 or systemd."
+            exit 1
+          fi
+          
+          echo "Deployment completed successfully!"
+          EOL
+          
+          # Make the script executable
+          chmod +x deploy/deploy.sh
+          
+          # Copy files to VPS
+          rsync -avz --delete deploy/ $VPS_USERNAME@$VPS_HOST:$APP_DIR/
+          
+          # Execute deployment script on VPS
+          ssh $VPS_USERNAME@$VPS_HOST "cd $APP_DIR && ./deploy.sh"
