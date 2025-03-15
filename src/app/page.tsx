@@ -25,10 +25,10 @@ export default async function HomePage() {
                 Welcome back, <span className="text-blue-400">{session.user?.name}</span>!
               </p>
               <Link
-                href="/dashboard"
+                href="/measurement-test"
                 className="mt-4 rounded-lg bg-blue-500 px-6 py-3 font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                Go to Dashboard
+                Try to measure with your device
               </Link>
             </div>
           ) : (
