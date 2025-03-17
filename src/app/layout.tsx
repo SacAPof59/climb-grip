@@ -1,5 +1,6 @@
 import { Providers } from './providers';
-import './globals.css'; // Make sure this exists or remove if not needed
+import './globals.css';
+import { NavigationDock } from './components/NavigationDock';
 
 export const metadata = {
   title: 'Climb Grip',
@@ -8,9 +9,12 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="emerald">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="min-h-screen pb-16">{children}</div>
+          <NavigationDock />
+        </Providers>
       </body>
     </html>
   );

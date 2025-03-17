@@ -22,13 +22,13 @@ export default async function EditProfilePage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-700 text-white px-4 py-6">
+    <div className="min-h-screen bg-base-200 px-4 py-6">
       <div className="max-w-md mx-auto">
         {/* Header with back button */}
         <div className="flex items-center mb-8">
           <Link
             href="/profile"
-            className="mr-3 p-2 rounded-full hover:bg-slate-600 transition-colors"
+            className="btn btn-circle btn-ghost mr-3"
             aria-label="Back to profile"
           >
             <ArrowLeftIcon className="h-5 w-5" />
@@ -37,8 +37,10 @@ export default async function EditProfilePage() {
         </div>
 
         {/* Profile form */}
-        <div className="bg-slate-800 rounded-lg p-6 shadow-lg">
-          <ProfileForm user={user} />
+        <div className="card bg-base-100 shadow-lg">
+          <div className="card-body">
+            <ProfileForm user={user} />
+          </div>
         </div>
       </div>
     </div>

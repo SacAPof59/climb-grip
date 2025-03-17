@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Climber } from '@prisma/client';
-import Link from 'next/link';
 
 type UserWithClimber = User & {
   climber: Climber | null;
@@ -14,7 +13,6 @@ export default function ProfileForm({ user }: { user: UserWithClimber | null }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize form state with existing data or defaults
   const [formData, setFormData] = useState({
     alias: user?.climber?.alias || '',
     age: user?.climber?.age?.toString() || '',
@@ -38,24 +36,22 @@ export default function ProfileForm({ user }: { user: UserWithClimber | null }) 
     try {
       const response = await fetch('/api/profile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           age: formData.age ? parseInt(formData.age) : null,
-          height: formData.height ? parseFloat(formData.height) : null,
-          span: formData.span ? parseFloat(formData.span) : null,
+          height: formData.height ? parseInt(formData.height) : null,
+          span: formData.span ? parseInt(formData.span) : null,
         }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update profile');
+        const errMsg = await response.json();
+        throw new Error(errMsg.message || 'Failed to update profile');
       }
 
       router.push('/profile');
-      router.refresh(); // Refresh the page data
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
@@ -64,144 +60,96 @@ export default function ProfileForm({ user }: { user: UserWithClimber | null }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="form-control space-y-4 w-full">
       {error && (
-        <div className="bg-red-900/50 border border-red-500 text-white p-3 rounded-md">{error}</div>
+        <div className="alert alert-error">
+          <span>{error}</span>
+        </div>
       )}
 
-      <div>
-        <label htmlFor="alias" className="block text-sm font-medium text-gray-300 mb-1">
-          Climbing Nickname/Alias
-        </label>
-        <input
-          type="text"
-          id="alias"
-          name="alias"
-          value={formData.alias}
-          onChange={handleChange}
-          className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
+      <label className="label label-text text-gray-700">Climbing Nickname/Alias</label>
+      <input
+        type="text"
+        name="alias"
+        value={formData.alias}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-300 mb-1">
-            Age
-          </label>
-          <input
-            type="number"
-            id="age"
-            name="age"
-            value={formData.age}
-            onChange={handleChange}
-            min="0"
-            max="120"
-            className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+      <label className="label label-text text-gray-700">Age</label>
+      <input
+        type="number"
+        name="age"
+        min="0"
+        max="120"
+        step="1"
+        value={formData.age}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
-        <div>
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-300 mb-1">
-            Gender
-          </label>
-          <select
-            id="gender"
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
-            className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Select</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="non-binary">Non-binary</option>
-            <option value="other">Other</option>
-            <option value="prefer-not-to-say">Prefer not to say</option>
-          </select>
-        </div>
-      </div>
+      <label className="label label-text text-gray-700">Gender</label>
+      <select
+        name="gender"
+        value={formData.gender}
+        onChange={handleChange}
+        className="select select-bordered w-full"
+      >
+        <option value="">Select</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="non-binary">Non-binary</option>
+        <option value="other">Other</option>
+        <option value="prefer-not-to-say">Prefer not to say</option>
+      </select>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="height" className="block text-sm font-medium text-gray-300 mb-1">
-            Height (cm)
-          </label>
-          <input
-            type="number"
-            id="height"
-            name="height"
-            value={formData.height}
-            onChange={handleChange}
-            step="0.1"
-            min="0"
-            className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+      <label className="label label-text text-gray-700">Height (cm)</label>
+      <input
+        type="number"
+        name="height"
+        min="100"
+        max="250"
+        step="1"
+        value={formData.height}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
-        <div>
-          <label htmlFor="span" className="block text-sm font-medium text-gray-300 mb-1">
-            Arm Span (cm)
-          </label>
-          <input
-            type="number"
-            id="span"
-            name="span"
-            value={formData.span}
-            onChange={handleChange}
-            step="0.1"
-            min="0"
-            className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+      <label className="label label-text text-gray-700">Arm Span (cm)</label>
+      <input
+        type="number"
+        name="span"
+        min="100"
+        max="250"
+        step="1"
+        value={formData.span}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
-      <div className="pt-4 border-t border-slate-700">
-        <h3 className="text-md font-medium mb-3 text-blue-400">Climbing Grades</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="routeGrade" className="block text-sm font-medium text-gray-300 mb-1">
-              Route Grade
-            </label>
-            <input
-              type="text"
-              id="routeGrade"
-              name="routeGrade"
-              value={formData.routeGrade}
-              onChange={handleChange}
-              placeholder="e.g. 5.10c, 7a"
-              className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      <label className="label label-text text-gray-700">Route Grade</label>
+      <input
+        type="text"
+        name="routeGrade"
+        value={formData.routeGrade}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
-          <div>
-            <label htmlFor="boulderGrade" className="block text-sm font-medium text-gray-300 mb-1">
-              Boulder Grade
-            </label>
-            <input
-              type="text"
-              id="boulderGrade"
-              name="boulderGrade"
-              value={formData.boulderGrade}
-              onChange={handleChange}
-              placeholder="e.g. V5, 6B+"
-              className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
+      <label className="label label-text text-gray-700">Boulder Grade</label>
+      <input
+        type="text"
+        name="boulderGrade"
+        value={formData.boulderGrade}
+        onChange={handleChange}
+        className="input input-bordered w-full"
+      />
 
       <div className="flex justify-end space-x-3 pt-4">
-        <Link
-          href="/profile"
-          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-md text-white transition-colors"
-        >
+        <button type="button" onClick={() => router.push('/profile')} className="btn btn-ghost">
           Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        </button>
+        <button type="submit" disabled={isSubmitting} className="btn btn-primary">
           {isSubmitting ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
