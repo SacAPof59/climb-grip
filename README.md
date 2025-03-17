@@ -20,6 +20,37 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Contribution Guidelines
+
+### Pull Request Process
+
+- All contributions to this project are made through pull requests
+- Create a feature branch from the main branch for your work
+- Submit a pull request when your changes are ready for review
+
+### Automated Checks
+
+Upon opening a pull request, automated checks will run to ensure:
+
+- Code formatting meets project standards
+- Linting passes without errors
+- The application builds successfully
+
+### Running Checks Locally
+
+Before submitting a pull request, run these checks on your machine:
+
+```bash
+# Format code with Prettier
+npm run format
+
+# Check for linting issues
+npm run lint
+
+# Verify the build works
+npm run build
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

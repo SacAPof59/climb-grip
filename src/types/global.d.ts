@@ -44,3 +44,44 @@ interface Event {
 interface EventTarget {
   value?: DataView;
 }
+
+// Timer types
+type TimerExercise = {
+  id: string;
+  name: string;
+  duration: number;
+  restDuration: number;
+  repetition: number;
+};
+
+type TimerStep = {
+  id: string;
+  name: string;
+  restDuration: number;
+  repetition: number;
+  exercises: TimerExercise[];
+};
+
+type Timer = {
+  id: string;
+  name: string;
+  steps: TimerStep[];
+  createdAt?: string;
+  updatedAt?: string;
+  userId?: string;
+  duration?: string;
+  totalSeconds?: number;
+};
+
+// Phase types
+type PhaseType = 'exercise' | 'exerciseRest' | 'stepRest';
+
+type Phase = {
+  type: PhaseType;
+  stepIndex: number;
+  exerciseIndex: number;
+  repetition: number;
+  exerciseRepetition: number;
+  duration: number;
+  name: string;
+};
