@@ -1,7 +1,7 @@
 // src/app/timer/[id]/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeftIcon } from 'lucide-react';
@@ -13,10 +13,14 @@ export default function TimerRunPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const victorySoundRef = useRef<HTMLAudioElement | null>(null);
 
   // Fetch timer data
   useEffect(() => {
     const fetchTimer = async () => {
+      // Initialize audio references
+      victorySoundRef.current = new Audio('/sound/timer_victory.mp3');
+
       try {
         const res = await fetch(`/api/timer/${params.id}`);
         if (!res.ok) {
@@ -35,6 +39,7 @@ export default function TimerRunPage() {
   }, [params.id]);
 
   const handleTimerComplete = () => {
+    if (victorySoundRef.current) victorySoundRef.current.play();
     setCompleted(true);
   };
 
