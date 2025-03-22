@@ -105,12 +105,13 @@ model WorkoutType {
 }
 
 model WorkoutTypeSequence {
-  workoutName  String       @map("workout_name")
-  sequence     Int          @map("sequence")
-  sequenceType SequenceType @map("sequence_type")
-  duration     Int
-  instruction  String?
-  workoutType  WorkoutType  @relation(fields: [workoutName], references: [name])
+  workoutName   String       @map("workout_name")
+  sequence      Int          @map("sequence")
+  sequenceType  SequenceType @map("sequence_type")
+  duration      Int
+  instruction   String?
+  registerForce Boolean      @default(false) @map("register_force")
+  workoutType   WorkoutType  @relation(fields: [workoutName], references: [name])
 
   @@id([workoutName, sequence])
   @@map("workout_type_sequence")
