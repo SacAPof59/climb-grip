@@ -111,7 +111,7 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
         }
         return prev ? prev - 1 : null;
       });
-    }, 600);
+    }, 750);
 
     return () => clearInterval(interval);
   }, [countdown, isRunning, isFirstStart]);

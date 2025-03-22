@@ -13,6 +13,7 @@ interface WorkoutTypeSequence {
     sequenceType: 'EFFORT' | 'REST';
     duration: number;
     instruction?: string | null;
+    registerForce: boolean;
 }
 
 interface WorkoutType {

@@ -81,7 +81,7 @@ export default function WorkoutDescriptionCard({workoutType}: WorkoutDescription
 
                 <div className="card-actions justify-end mt-4">
                     <Link
-                        href={`/workout/start?name=${encodeURIComponent(workoutType.name)}`}
+                        href={`/workout/${encodeURIComponent(workoutType.name)}`}
                         className="btn btn-primary btn-sm"
                     >
                         <PlayIcon className="h-4 w-4 mr-1"/>
