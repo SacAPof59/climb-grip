@@ -1,4 +1,5 @@
 // global.d.ts
+
 interface Navigator {
   bluetooth: {
     requestDevice(options: RequestDeviceOptions): Promise<BluetoothDevice>;
@@ -74,7 +75,7 @@ type Timer = {
 };
 
 // Phase types
-type PhaseType = 'exercise' | 'exerciseRest' | 'stepRest';
+type TimerPhaseType = 'exercise' | 'exerciseRest' | 'stepRest';
 
 type Phase = {
   type: PhaseType;
@@ -85,3 +86,25 @@ type Phase = {
   duration: number;
   name: string;
 };
+
+interface WorkoutTypeSequence {
+  workoutName: string;
+  sequence: number;
+  sequenceType: 'EFFORT' | 'REST';
+  duration: number;
+  instruction?: string | null;
+  recordForce: boolean;
+}
+
+interface WorkoutType {
+  name: string;
+  description: string | null;
+  workoutTypeSequences: WorkoutTypeSequence[];
+}
+
+interface MeasuredData {
+  sequence: number;
+  iteration: number;
+  weight: number;
+  timestamp: number; // milliseconds since recording started
+}

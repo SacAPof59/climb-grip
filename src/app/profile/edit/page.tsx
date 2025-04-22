@@ -4,7 +4,7 @@ import { authOptions } from '@/authOptions';
 import Link from 'next/link';
 import { ArrowLeftIcon } from 'lucide-react';
 import { prisma } from '../../../../prisma';
-import ProfileForm from '@/app/components/ProfileForm';
+import ProfileForm from '@/app/components/profile/ProfileForm';
 
 export default async function EditProfilePage() {
   const session = await getServerSession(authOptions);

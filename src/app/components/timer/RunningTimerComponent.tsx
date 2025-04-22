@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PauseIcon, PlayIcon } from 'lucide-react';
+import TimerRadialProgressComponent from './TimerRadialProgressComponent';
 
 type Timer = {
   name: string;
@@ -37,37 +38,16 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
   const [isRunning, setIsRunning] = useState(false);
   const [currentPhase, setCurrentPhase] = useState<Phase | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<number>(3);
+  const [isCountdownActive, setIsCountdownActive] = useState(false);
   const [isFirstStart, setIsFirstStart] = useState(true);
+  const [phaseCounter, setPhaseCounter] = useState(0);
 
-  // Audio refs
-  const audioRefs = useRef({
-    introSound: null as HTMLAudioElement | null,
-    startSound: null as HTMLAudioElement | null,
-    endSound: null as HTMLAudioElement | null,
-  });
-
-  // Completion tracking refs
+  // Completion tracking ref
   const completionRef = useRef({
     phaseCompleted: false,
     timerCompleted: false,
   });
-
-  // Memoize audio functions to fix dependency warnings
-  const initializeAudio = useCallback(() => {
-    audioRefs.current.introSound = new Audio('/sound/timer_intro.mp3');
-    audioRefs.current.startSound = new Audio('/sound/timer_start.mp3');
-    audioRefs.current.endSound = new Audio('/sound/timer_end.mp3');
-  }, []);
-
-  const cleanupAudio = useCallback(() => {
-    Object.values(audioRefs.current).forEach(audio => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-      }
-    });
-  }, []);
 
   // Initialize timer with first phase
   useEffect(() => {
@@ -77,48 +57,30 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
     }
   }, [timer]);
 
-  // Initialize audio elements - fixed dependency array
-  useEffect(() => {
-    initializeAudio();
-    return cleanupAudio;
-  }, [initializeAudio, cleanupAudio]);
-
   // Countdown logic
   useEffect(() => {
-    if (countdown === null || !isRunning) return;
-
-    // Use current to access ref values
-    const introSound = audioRefs.current.introSound;
-    const startSound = audioRefs.current.startSound;
-
-    if (countdown === 3 && introSound) {
-      introSound.play();
-    }
+    if (!isRunning || !isCountdownActive) return;
 
     const interval = setInterval(() => {
       setCountdown(prev => {
-        if (prev && prev <= 1) {
+        if (prev <= 1) {
           clearInterval(interval);
-          // Skip playing startSound for the first time after countdown
-          if (!isFirstStart && startSound) {
-            startSound.play();
-          }
-          setCountdown(null);
+          setIsCountdownActive(false);
           if (isFirstStart) {
             setIsFirstStart(false);
           }
-          return null;
+          return 0;
         }
-        return prev ? prev - 1 : null;
+        return prev - 1;
       });
-    }, 600);
+    }, 750);
 
     return () => clearInterval(interval);
-  }, [countdown, isRunning, isFirstStart]);
+  }, [isRunning, isCountdownActive, isFirstStart]);
 
   // Timer countdown logic
   useEffect(() => {
-    if (!isRunning || !currentPhase || timeLeft <= 0 || countdown !== null) return;
+    if (!isRunning || !currentPhase || timeLeft <= 0 || isCountdownActive) return;
 
     const interval = setInterval(() => {
       setTimeLeft(prev => {
@@ -132,7 +94,7 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isRunning, currentPhase, timeLeft, countdown]);
+  }, [isRunning, currentPhase, timeLeft, isCountdownActive]);
 
   // Handle phase completion
   useEffect(() => {
@@ -162,6 +124,7 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       name: firstExercise.name,
     });
     setTimeLeft(firstExercise.duration);
+    setPhaseCounter(1);
   }
 
   function handlePhaseComplete() {
@@ -177,8 +140,6 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
   }
 
   function handleExerciseComplete() {
-    if (audioRefs.current.endSound) audioRefs.current.endSound.play();
-
     const currentStep = timer.steps[currentPhase!.stepIndex];
     const currentExercise = currentStep.exercises[currentPhase!.exerciseIndex];
 
@@ -199,6 +160,7 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
   }
 
   function moveToExerciseRest() {
+    setPhaseCounter(prev => prev + 1);
     const currentExercise =
       timer.steps[currentPhase!.stepIndex].exercises[currentPhase!.exerciseIndex];
 
@@ -212,6 +174,7 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
   }
 
   function handleExerciseRestComplete() {
+    setPhaseCounter(prev => prev + 1);
     const currentExercise =
       timer.steps[currentPhase!.stepIndex].exercises[currentPhase!.exerciseIndex];
 
@@ -223,12 +186,11 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       name: currentExercise.name,
     });
     setTimeLeft(currentExercise.duration);
-
-    if (audioRefs.current.startSound) audioRefs.current.startSound.play();
   }
 
   function moveToNextExercise(nextExerciseIndex: number) {
     const nextExercise = timer.steps[currentPhase!.stepIndex].exercises[nextExerciseIndex];
+    setPhaseCounter(prev => prev + 1);
 
     setCurrentPhase({
       ...currentPhase!,
@@ -239,12 +201,11 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       name: nextExercise.name,
     });
     setTimeLeft(nextExercise.duration);
-
-    if (audioRefs.current.startSound) audioRefs.current.startSound.play();
   }
 
   function moveToStepRest() {
     const currentStep = timer.steps[currentPhase!.stepIndex];
+    setPhaseCounter(prev => prev + 1);
 
     setCurrentPhase({
       ...currentPhase!,
@@ -255,13 +216,12 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       name: `Step Rest`,
     });
     setTimeLeft(currentStep.restDuration);
-
-    if (audioRefs.current.endSound) audioRefs.current.endSound.play();
   }
 
   function moveToNextStep() {
     const currentStep = timer.steps[currentPhase!.stepIndex];
     const currentStepRepetition = currentPhase!.repetition;
+    setPhaseCounter(prev => prev + 1);
 
     // Check if we need to repeat the current step
     if (currentStepRepetition < currentStep.repetition) {
@@ -290,8 +250,6 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       name: firstExercise.name,
     });
     setTimeLeft(firstExercise.duration);
-
-    if (audioRefs.current.startSound) audioRefs.current.startSound.play();
   }
 
   function moveToFirstExerciseOfNextStep(nextStepIndex: number) {
@@ -309,14 +267,13 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
         name: firstExercise.name,
       });
       setTimeLeft(firstExercise.duration);
-
-      if (audioRefs.current.startSound) audioRefs.current.startSound.play();
     }
   }
 
   function togglePlayPause() {
     if (!isRunning) {
-      if (countdown === null) {
+      if (!isCountdownActive && isFirstStart) {
+        setIsCountdownActive(true);
         setCountdown(3); // Start the 3-2-1 countdown
       }
       setIsRunning(true);
@@ -324,24 +281,6 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
       setIsRunning(false);
     }
   }
-
-  // Utility functions
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getColorClass = () => {
-    switch (currentPhase?.type) {
-      case 'exercise':
-        return 'text-primary';
-      case 'exerciseRest':
-        return 'text-secondary';
-      default:
-        return 'text-accent';
-    }
-  };
 
   // Progress calculation functions
   function calculateStepProgress() {
@@ -398,14 +337,13 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
 
   const stepProgress = calculateStepProgress();
   const exerciseProgress = calculateExerciseProgress();
-  const progressValue = Math.round((timeLeft / currentPhase.duration) * 100);
 
   return (
     <div className="w-full max-w-md">
       {/* Progress Information */}
       <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold">
-          {countdown !== null ? 'Get Ready!' : currentPhase.name}
+          {isCountdownActive ? 'Get Ready!' : currentPhase.name}
         </h2>
 
         {/* Step Name and Repetition Display */}
@@ -457,41 +395,13 @@ export default function RunningTimerComponent({ timer, onComplete }: TimerBlocPr
 
       {/* Timer Display */}
       <div className="flex justify-center mb-8">
-        {countdown !== null ? (
-          /* Pulsing Countdown Display */
-          <div className="flex items-center justify-center w-48 h-48 rounded-full bg-base-200">
-            <div className="text-8xl font-bold text-warning animate-pulse">{countdown}</div>
-          </div>
-        ) : (
-          /* Regular Timer Display */
-          <div
-            className={`radial-progress ${getColorClass()}`}
-            style={
-              {
-                '--value': progressValue,
-                '--size': '12rem',
-                '--thickness': '1rem',
-              } as React.CSSProperties
-            }
-            role="progressbar"
-            aria-valuenow={progressValue}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div className="text-center">
-              <div className="text-4xl font-bold">{formatTime(timeLeft)}</div>
-              {currentPhase.type === 'exercise' && (
-                <div className="text-sm mt-2">
-                  Rep {currentPhase.exerciseRepetition}/
-                  {
-                    timer.steps[currentPhase.stepIndex].exercises[currentPhase.exerciseIndex]
-                      .repetition
-                  }
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <TimerRadialProgressComponent
+          current={isCountdownActive ? countdown : timeLeft}
+          max={isCountdownActive ? 3 : currentPhase.duration}
+          phaseType={isCountdownActive ? 'countdown' : currentPhase.type}
+          phaseCounter={phaseCounter}
+          isRunning={isRunning}
+        />
       </div>
 
       {/* Play/Pause Button */}

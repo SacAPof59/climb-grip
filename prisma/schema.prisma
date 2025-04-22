@@ -110,6 +110,7 @@ model WorkoutTypeSequence {
   sequenceType SequenceType @map("sequence_type")
   duration     Int
   instruction  String?
+  recordForce  Boolean      @default(false) @map("record_force")
   workoutType  WorkoutType  @relation(fields: [workoutName], references: [name])
 
   @@id([workoutName, sequence])
@@ -124,7 +125,6 @@ model Workout {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   measurements Measurement[]
-  timer        Timer?
   climber      Climber       @relation(fields: [climberId], references: [id])
   workoutType  WorkoutType   @relation(fields: [workoutName], references: [name])
 
@@ -158,6 +158,7 @@ model Measurement {
   sequenceType        SequenceType          @map("sequence_type")
   duration            Int
   measurementDeviceId String?               @map("measurement_device_id")
+  measurementRate     Int                   @map("measurement_rate")
   currentRepetition   Int                   @map("current_repetition")
   createdAt           DateTime              @default(now()) @map("created_at")
   updatedAt           DateTime              @updatedAt @map("updated_at")
@@ -208,7 +209,6 @@ model Timer {
   userId    String?     @map("user_id")
   workoutId String?     @unique @map("workout_id")
   user      User?       @relation(fields: [userId], references: [id])
-  workout   Workout?    @relation(fields: [workoutId], references: [id])
   steps     TimerStep[]
 
   @@map("timer")

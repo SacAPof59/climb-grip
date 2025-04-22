@@ -82,69 +82,78 @@ export default function WeightMeasurementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 px-4 py-6">
-      <div className="max-w-lg mx-auto">
-        {/* Header with back button */}
-        <div className="flex items-center mb-8">
-          <Link href="/" className="btn btn-circle btn-ghost mr-3" aria-label="Back to main page">
+    <div className="min-h-screen bg-base-200 pb-16">
+      {/* Header */}
+      <div className="navbar bg-base-100 shadow-md sticky top-0 z-10">
+        <div className="navbar-start">
+          <Link href="/" className="btn btn-circle btn-ghost">
             <ArrowLeftIcon className="h-5 w-5" />
           </Link>
-          <h1 className="text-2xl font-bold">Force Measurement</h1>
         </div>
+        <div className="navbar-center">
+          <h1 className="text-xl font-bold">Force Measurement</h1>
+        </div>
+        <div className="navbar-end"></div>
+      </div>
 
-        {/* Target Weight Input Card */}
-        <div className="card bg-base-100 shadow-lg mb-6">
-          <div className="card-body">
-            <h2 className="card-title text-primary">Target Weight</h2>
-            <div className="flex items-center">
-              <input
-                type="number"
-                value={targetWeight}
-                onChange={e => setTargetWeight(Number(e.target.value))}
-                className="input input-bordered w-full max-w-xs mr-2"
-                min="1"
-                max="200"
-              />
-              <span>kg</span>
+      <div className="container mx-auto px-4 pt-6">
+        <div className="max-w-lg mx-auto">
+          {/* Target Weight Input Card */}
+          <div className="card bg-base-100 shadow-lg mb-6">
+            <div className="card-body">
+              <h2 className="card-title text-primary">Target Weight</h2>
+              <div className="flex items-center">
+                <input
+                  type="number"
+                  value={targetWeight}
+                  onChange={e => setTargetWeight(Number(e.target.value))}
+                  className="input input-bordered w-full max-w-xs mr-2"
+                  min="1"
+                  max="200"
+                />
+                <span>kg</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Weight Display Card */}
-        <div className="card bg-base-100 shadow-lg mb-6">
-          <div className="card-body items-center text-center">
-            <h2 className="card-title text-primary">Current Measurement</h2>
+          {/* Weight Display Card */}
+          <div className="card bg-base-100 shadow-lg mb-6">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title text-primary">Current Measurement</h2>
 
-            <div className={`text-5xl font-bold my-4 ${getWeightColor()}`}>
-              {weight} <span className="text-2xl">kg</span>
+              <div className={`text-5xl font-bold my-4 ${getWeightColor()}`}>
+                {weight} <span className="text-2xl">kg</span>
+              </div>
+
+              <div className="flex items-center mb-2">
+                <div
+                  className={`badge mr-2 ${isConnected ? 'badge-success' : 'badge-error'}`}
+                ></div>
+                <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+              </div>
+
+              <div className="mb-4">Battery: {batteryLevel}</div>
+
+              <button
+                onClick={isConnected ? disconnectFromScale : connectToScale}
+                className={`btn btn-block ${isConnected ? 'btn-error' : 'btn-primary'}`}
+              >
+                {isConnected ? 'Disconnect Device' : 'Connect to ForceGrip'}
+              </button>
             </div>
-
-            <div className="flex items-center mb-2">
-              <div className={`badge mr-2 ${isConnected ? 'badge-success' : 'badge-error'}`}></div>
-              <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-            </div>
-
-            <div className="mb-4">Battery: {batteryLevel}</div>
-
-            <button
-              onClick={isConnected ? disconnectFromScale : connectToScale}
-              className={`btn btn-block ${isConnected ? 'btn-error' : 'btn-primary'}`}
-            >
-              {isConnected ? 'Disconnect Device' : 'Connect to ForceGrip'}
-            </button>
           </div>
-        </div>
 
-        {/* Instructions Card */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h2 className="card-title text-primary">Instructions</h2>
-            <ol className="list-decimal ml-5 space-y-2">
-              <li>Click &ldquo;Connect to ForceGrip&rdquo; to pair with your device</li>
-              <li>Set your target weight</li>
-              <li>Use the grip sensor to measure your force output</li>
-              <li>The measurement will update in real-time</li>
-            </ol>
+          {/* Instructions Card */}
+          <div className="card bg-base-100 shadow-lg">
+            <div className="card-body">
+              <h2 className="card-title text-primary">Instructions</h2>
+              <ol className="list-decimal ml-5 space-y-2">
+                <li>Click &ldquo;Connect to ForceGrip&rdquo; to pair with your device</li>
+                <li>Set your target weight</li>
+                <li>Use the grip sensor to measure your force output</li>
+                <li>The measurement will update in real-time</li>
+              </ol>
+            </div>
           </div>
         </div>
       </div>
