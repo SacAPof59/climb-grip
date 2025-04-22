@@ -101,3 +101,20 @@ npx prisma studio
 ```
 
 Now your local PostgreSQL database is ready for development with the same structure as your production environment.
+
+# Adding test data
+
+To add test data to your local PostgreSQL database, you can use the following SQL commands. This will help you verify that your application works correctly with sample data.
+
+```sql
+-- Insert a workout type
+INSERT INTO "workout_type" ("name", "description")
+VALUES ('Hangboard Repeaters', 'A progressive hanging workout for finger strength development');
+
+-- Insert workout type sequences
+INSERT INTO "workout_type_sequence" ("workout_name", "sequence", "sequence_type", "duration", "instruction", "record_force")
+VALUES
+  ('Hangboard Repeaters', 3, 'EFFORT', 5, 'Hang with maximum effort', true),
+  ('Hangboard Repeaters', 4, 'REST', 5, 'Shake out and recover', false),
+  ('Hangboard Repeaters', 5, 'EFFORT', 10, 'Hang with maximum effort', true);
+```

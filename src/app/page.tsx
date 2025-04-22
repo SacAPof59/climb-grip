@@ -2,13 +2,16 @@ import { getServerSession } from 'next-auth/next';
 import Link from 'next/link';
 import LoginButton from './components/LoginButton';
 import { authOptions } from '@/authOptions';
-import { ClockIcon, LineChartIcon, BarChart3Icon, UserIcon } from 'lucide-react';
+import { ClockIcon, LineChartIcon, BarChart3Icon, UserIcon, DumbbellIcon } from 'lucide-react';
+import SoundPreloader from './components/SoundPreloader';
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
 
   return (
     <div className="min-h-screen flex flex-col bg-base-200">
+      {/* Preload sounds */}
+      <SoundPreloader />
       {/* Hero Section */}
       <div className="hero from-slate-900 to-slate-700 py-12 px-4">
         <div className="hero-content text-center">
@@ -45,11 +48,21 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link
-                href="/workout"
+                href="/mystats"
                 className="card bg-base-100 shadow-lg hover:shadow-xl transition-all border border-base-300 hover:border-primary"
               >
                 <div className="card-body items-center text-center">
                   <BarChart3Icon className="w-12 h-12 text-primary" />
+                  <h2 className="card-title mt-3">My stats</h2>
+                  <p className="text-base-content/70">Access to your stats</p>
+                </div>
+              </Link>
+              <Link
+                href="/workout"
+                className="card bg-base-100 shadow-lg hover:shadow-xl transition-all border border-base-300 hover:border-primary"
+              >
+                <div className="card-body items-center text-center">
+                  <DumbbellIcon className="w-12 h-12 text-primary" />
                   <h2 className="card-title mt-3">Workouts</h2>
                   <p className="text-base-content/70">Track your climbing workouts</p>
                 </div>
