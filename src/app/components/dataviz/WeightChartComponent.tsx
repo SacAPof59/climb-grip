@@ -1,18 +1,8 @@
 'use client';
 
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import type { ChartOptions } from 'chart.js';
 
 interface WeightChartProps {
   labels: string[];
@@ -20,25 +10,61 @@ interface WeightChartProps {
 }
 
 export default function WeightChartComponent({ labels, data }: WeightChartProps) {
+  const [chartReady, setChartReady] = useState(false);
+
+  // Filter out any invalid data points
+  const validData = data.filter(point => point !== undefined && point !== null);
+  const validLabels = labels.slice(0, validData.length);
+
+  useEffect(() => {
+    // Register Chart.js components only on the client side
+    import('chart.js').then(
+      ({
+        Chart,
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend,
+      }) => {
+        Chart.register(
+          CategoryScale,
+          LinearScale,
+          PointElement,
+          LineElement,
+          Title,
+          Tooltip,
+          Legend
+        );
+        setChartReady(true);
+      }
+    );
+  }, []);
+
   const chartData = {
-    labels,
+    labels: validLabels,
     datasets: [
       {
         label: 'Weight (kg)',
-        data,
+        data: validData,
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1,
+        tension: validData.length > 2 ? 0.1 : 0,
       },
     ],
   };
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
-    maintainAspectRatio: false, // This allows the chart to fill the container
+    maintainAspectRatio: false,
     elements: {
       point: {
-        radius: 0, // Hide points
+        radius: 2,
+      },
+      line: {
+        cubicInterpolationMode: 'monotone' as const, // Type assertion to make it a literal
       },
     },
     plugins: {
@@ -54,11 +80,11 @@ export default function WeightChartComponent({ labels, data }: WeightChartProps)
 
   return (
     <div className="h-full mt-2">
-      {data.length > 0 ? (
+      {validData.length > 0 && chartReady ? (
         <Line data={chartData} options={chartOptions} />
       ) : (
         <div className="flex items-center justify-center h-full text-gray-500">
-          No data recorded yet
+          {validData.length === 0 ? 'No data recorded yet' : 'Loading chart...'}
         </div>
       )}
     </div>
