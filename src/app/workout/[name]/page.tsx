@@ -37,6 +37,7 @@ export default function WorkoutRunningPage() {
   const [currentWeight, setCurrentWeight] = useState('--');
   const [requiresForceDevice, setRequiresForceDevice] = useState(false);
   const [isWorkoutStarted, setIsWorkoutStarted] = useState(false);
+  const [climberBodyWeight, setClimberBodyWeight] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchWorkoutType = async () => {
@@ -74,10 +75,11 @@ export default function WorkoutRunningPage() {
   }, []);
 
   // Props function for the detailed description component
-  const handleStartWorkout = async () => {
+  const handleStartWorkout = async (bodyWeight: number) => {
     if (requiresForceDevice && !isDeviceConnected) {
       return; // Don't start if device is required but not connected
     }
+    setClimberBodyWeight(bodyWeight);
     setIsWorkoutStarted(true);
   };
 
@@ -157,6 +159,7 @@ export default function WorkoutRunningPage() {
             workoutType={workoutType}
             isDeviceConnected={isDeviceConnected}
             weight={currentWeight}
+            bodyWeight={climberBodyWeight} // Add this new prop
             onWorkoutExit={handleWorkoutExit}
           />
         ) : (
