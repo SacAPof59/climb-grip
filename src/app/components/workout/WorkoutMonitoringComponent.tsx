@@ -10,6 +10,7 @@ interface WorkoutTimerComponentProps {
   workoutType: WorkoutType;
   isDeviceConnected: boolean;
   weight: string;
+  bodyWeight: number | null; // Add this new prop
   onWorkoutExit?: (workoutId?: string) => void;
 }
 
@@ -17,6 +18,7 @@ export default function WorkoutMonitoringComponent({
   workoutType,
   isDeviceConnected,
   weight,
+  bodyWeight,
   onWorkoutExit,
 }: WorkoutTimerComponentProps) {
   // Core states
@@ -90,7 +92,7 @@ export default function WorkoutMonitoringComponent({
         body: JSON.stringify({
           workoutName: workoutType.name,
           measurementsData,
-          bodyWeight: parseFloat(weight) || null,
+          bodyWeight: bodyWeight,
         }),
       });
 
@@ -105,7 +107,7 @@ export default function WorkoutMonitoringComponent({
       console.error('Error saving workout:', error);
       alert('Failed to save workout. Please try again.');
     }
-  }, [weight, workoutType.name]);
+  }, [bodyWeight, workoutType.name]);
 
   const exitWorkout = () => {
     if (onWorkoutExit) {

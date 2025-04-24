@@ -1,6 +1,7 @@
 // src/app/components/workout/WorkoutDetailedDescriptionComponent.tsx
 'use client';
 
+import { useState } from 'react';
 import { PlayIcon, CheckCircle, XCircle, Clock as ClockIcon } from 'lucide-react';
 
 interface WorkoutTypeSequence {
@@ -21,7 +22,7 @@ interface WorkoutType {
 interface WorkoutDetailedDescriptionComponentProps {
   workout: WorkoutType;
   isDeviceConnected: boolean;
-  onStartWorkout: () => void;
+  onStartWorkout: (bodyWeight: number) => void;
 }
 
 export default function WorkoutDetailedDescriptionComponent({
@@ -29,6 +30,9 @@ export default function WorkoutDetailedDescriptionComponent({
   isDeviceConnected,
   onStartWorkout,
 }: WorkoutDetailedDescriptionComponentProps) {
+  const [bodyWeight, setBodyWeight] = useState<string>('');
+  const [weightError, setWeightError] = useState<string | null>(null);
+
   // Check if any sequence requires force recording
   const requiresDevice = workout.workoutTypeSequences.some(seq => seq.recordForce);
 
@@ -41,6 +45,42 @@ export default function WorkoutDetailedDescriptionComponent({
 
   // Total workout duration
   const totalDuration = workout.workoutTypeSequences.reduce((sum, seq) => sum + seq.duration, 0);
+
+  // Validate body weight input
+  const validateWeight = (value: string) => {
+    const floatRegex = /^\d+(\.\d+)?$/;
+    if (!value) {
+      setWeightError('Body weight is required');
+      return false;
+    }
+    if (!floatRegex.test(value)) {
+      setWeightError('Please enter a valid number');
+      return false;
+    }
+    const numValue = parseFloat(value);
+    if (numValue <= 0 || numValue > 300) {
+      setWeightError('Please enter a weight between 0 and 300 kg');
+      return false;
+    }
+    setWeightError(null);
+    return true;
+  };
+
+  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBodyWeight(value);
+    validateWeight(value);
+  };
+
+  const handleStartWorkout = () => {
+    if (validateWeight(bodyWeight)) {
+      onStartWorkout(parseFloat(bodyWeight));
+    }
+  };
+
+  // Check if the start button should be disabled
+  const isStartButtonDisabled =
+    (requiresDevice && !isDeviceConnected) || !bodyWeight || weightError !== null;
 
   return (
     <div className="flex flex-col h-full w-full bg-base-100 rounded-xl shadow-lg p-6 overflow-hidden">
@@ -58,6 +98,45 @@ export default function WorkoutDetailedDescriptionComponent({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Body Weight Input */}
+      <div className="mt-6 form-control w-full max-w-xs mx-auto">
+        <label className="label">
+          <span className="label-text">Your current body weight (kg)</span>
+        </label>
+        <input
+          type="text"
+          placeholder="Enter your body weight"
+          className={`input input-bordered w-full ${weightError ? 'input-error' : ''}`}
+          value={bodyWeight}
+          onChange={handleWeightChange}
+        />
+        {weightError && (
+          <label className="label">
+            <span className="label-text-alt text-error">{weightError}</span>
+          </label>
+        )}
+      </div>
+
+      {/* Start button */}
+      <div className="mt-6 flex flex-col items-center">
+        <button
+          className="btn btn-primary btn-lg gap-2"
+          disabled={isStartButtonDisabled}
+          onClick={handleStartWorkout}
+        >
+          <PlayIcon className="h-6 w-6" />
+          Start Workout
+        </button>
+
+        {requiresDevice && !isDeviceConnected && (
+          <p className="text-sm text-error mt-2">Connect ForceGrip device to start the workout</p>
+        )}
+
+        {!bodyWeight && !weightError && (
+          <p className="text-sm text-warning mt-2">Please enter your body weight to continue</p>
+        )}
       </div>
 
       {/* Sequences table - updated for better overflow handling */}
@@ -96,22 +175,6 @@ export default function WorkoutDetailedDescriptionComponent({
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Start button */}
-      <div className="mt-6 flex flex-col items-center">
-        <button
-          className="btn btn-primary btn-lg gap-2"
-          disabled={requiresDevice && !isDeviceConnected}
-          onClick={onStartWorkout}
-        >
-          <PlayIcon className="h-6 w-6" />
-          Start Workout
-        </button>
-
-        {requiresDevice && !isDeviceConnected && (
-          <p className="text-sm text-error mt-2">Connect ForceGrip device to start the workout</p>
-        )}
       </div>
     </div>
   );
