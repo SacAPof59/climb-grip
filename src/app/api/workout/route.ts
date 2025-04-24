@@ -30,6 +30,7 @@ export async function GET(request: Request) {
         measurements: {
           include: {
             measuredData: true,
+            maxIsoFS: true, // Add this to include MaxIsoFingerStrength data
           },
         },
         workoutType: {
@@ -81,6 +82,15 @@ export async function GET(request: Request) {
         ...workout.measurements.flatMap(m => m.measuredData.map(d => d.weight))
       );
 
+      let maxIsoForce = 0;
+      workout.measurements.forEach(measurement => {
+        // First check if maxIsoFS exists and has a valid maxForce value
+        const currentForce = measurement.maxIsoFS?.maxForce ?? 0;
+        if (currentForce > maxIsoForce) {
+          maxIsoForce = currentForce;
+        }
+      });
+
       return {
         workoutId: workout.id,
         workoutName: workout.workoutName,
@@ -88,6 +98,7 @@ export async function GET(request: Request) {
         measurementsData,
         workoutSequences: workout.workoutType.workoutTypeSequences,
         maxWeight,
+        maxIsoForce: workout.workoutType.isMaxIsoFS ? maxIsoForce : undefined,
       };
     });
 
@@ -130,11 +141,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Workout type not found' }, { status: 404 });
     }
 
-    // Check if at least one sequence needs force recording in workout_type_sequence
-    const requiresForceRecording = workoutType.workoutTypeSequences.some(
-      sequence => sequence.recordForce
-    );
-
     // Create the workout record
     const workout = await prisma.workout.create({
       data: {
@@ -144,7 +150,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Process each measurement sequence
+    // Process each measurement sequence and create MaxIsoFingerStrength records if needed
     const measurementPromises = workoutType.workoutTypeSequences.map(async sequence => {
       // Find the corresponding measurement data if it exists
       const sequenceData =
@@ -164,7 +170,7 @@ export async function POST(request: Request) {
       });
 
       // If this sequence records force and we have data, save it
-      if (requiresForceRecording) {
+      if (sequence.recordForce && sequenceData.length > 0) {
         // Create measured data records
         await prisma.measuredData.createMany({
           data: sequenceData.map((item: { weight: number }, idx: number) => ({
@@ -173,6 +179,24 @@ export async function POST(request: Request) {
             weight: item.weight,
           })),
         });
+
+        // Calculate and store max isometric strength if needed
+        if (workoutType.isMaxIsoFS) {
+          // Calculate average/mean of the weight
+          const sum = sequenceData.reduce(
+            (acc: number, point: { weight: number }) => acc + point.weight,
+            0
+          );
+          const avgForce = sequenceData.length > 0 ? sum / sequenceData.length : 0;
+
+          // Create MaxIsoFingerStrength record
+          await prisma.maxIsoFingerStrength.create({
+            data: {
+              measurementId: measurement.id,
+              maxForce: avgForce,
+            },
+          });
+        }
       }
 
       return measurement;

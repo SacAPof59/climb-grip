@@ -13,6 +13,7 @@ interface WorkoutResult {
   measurementsData: Array<{ sequence: number; data: MeasuredData[] }>;
   workoutSequences: WorkoutTypeSequence[];
   maxWeight: number;
+  maxIsoForce?: number;
 }
 
 export default function MyStatsPage() {
@@ -130,6 +131,7 @@ export default function MyStatsPage() {
                   measurementsData={workout.measurementsData}
                   workoutSequences={workout.workoutSequences}
                   maxWeight={workout.maxWeight}
+                  maxIsoForce={workout.maxIsoForce}
                 />
               </div>
             ))}

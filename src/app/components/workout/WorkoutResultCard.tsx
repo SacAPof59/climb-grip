@@ -9,6 +9,7 @@ interface WorkoutResultCardProps {
   measurementsData: Array<{ sequence: number; data: MeasuredData[] }>;
   workoutSequences: WorkoutTypeSequence[];
   maxWeight: number;
+  maxIsoForce?: number;
 }
 
 export default function WorkoutResultCard({
@@ -17,6 +18,7 @@ export default function WorkoutResultCard({
   measurementsData,
   workoutSequences,
   maxWeight,
+  maxIsoForce,
 }: WorkoutResultCardProps) {
   // Format current date
   const currentDate = new Date().toLocaleDateString('en-GB', {
@@ -98,6 +100,14 @@ export default function WorkoutResultCard({
             <span>{maxWeight.toFixed(1)} kg</span>
           </div>
         </div>
+
+        {/* Add max isometrics strength if available */}
+        {maxIsoForce && (
+          <div className="mt-2 flex items-center">
+            <div className="badge badge-primary mr-2">Max Isometrics</div>
+            <span className="font-semibold">{maxIsoForce.toFixed(1)} kg</span>
+          </div>
+        )}
       </div>
 
       <div className="h-64 mb-4">
