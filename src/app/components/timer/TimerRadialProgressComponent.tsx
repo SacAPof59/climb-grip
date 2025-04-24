@@ -12,7 +12,7 @@ type TimerRadialProgressProps = {
   phaseType: PhaseType;
   phaseCounter: number;
   isRunning: boolean;
-  onSoundPlayed?: (soundType: 'intro' | 'start' | 'end') => void;
+  onSoundPlayed?: (soundType: 'intro' | 'start' | 'end' | 'victory') => void;
   onAudioLoaded?: (isLoaded: boolean) => void;
 };
 
@@ -54,19 +54,13 @@ export default function TimerRadialProgressComponent({
       play('timer_intro');
       soundPlayedRef.current = true;
       if (onSoundPlayed) onSoundPlayed('intro');
-    } else if (
-      (phaseType === 'exercise' || phaseType === 'exerciseRest' || phaseType === 'stepRest') &&
-      current === max
-    ) {
-      // Play start sound at the beginning of any phase
+    } else if (phaseType === 'exercise' && current === max) {
+      // Play start sound at the beginning of exercise phase
       play('timer_start');
       soundPlayedRef.current = true;
       if (onSoundPlayed) onSoundPlayed('start');
-    } else if (
-      (phaseType === 'exercise' || phaseType === 'exerciseRest' || phaseType === 'stepRest') &&
-      current === 0
-    ) {
-      // Play end sound at the end of any phase
+    } else if ((phaseType === 'exerciseRest' || phaseType === 'stepRest') && current === max) {
+      // Play start sound at the beginning of exercise phase
       play('timer_end');
       soundPlayedRef.current = true;
       if (onSoundPlayed) onSoundPlayed('end');
@@ -76,7 +70,11 @@ export default function TimerRadialProgressComponent({
   // Notify when all audio is loaded
   useEffect(() => {
     if (onAudioLoaded) {
-      const allSoundsLoaded = sounds['timer_intro'] && sounds['timer_start'] && sounds['timer_end'];
+      const allSoundsLoaded =
+        sounds['timer_intro'] &&
+        sounds['timer_start'] &&
+        sounds['timer_end'] &&
+        sounds['timer_victory'];
       onAudioLoaded(!isLoading && !!allSoundsLoaded);
     }
   }, [isLoading, sounds, onAudioLoaded]);

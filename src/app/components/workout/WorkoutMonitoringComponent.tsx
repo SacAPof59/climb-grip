@@ -5,6 +5,7 @@ import { PauseIcon, PlayIcon } from 'lucide-react';
 import TimerRadialProgressComponent from '@/app/components/timer/TimerRadialProgressComponent';
 import WorkoutMeasurementComponent from '@/app/components/workout/WorkoutMeasurementComponent';
 import WorkoutResultCard from '@/app/components/workout/WorkoutResultCard';
+import { useSoundStore } from '@/lib/sound/soundStore';
 
 interface WorkoutTimerComponentProps {
   workoutType: WorkoutType;
@@ -33,6 +34,7 @@ export default function WorkoutMonitoringComponent({
   >('countdown');
   const [phaseCounter, setPhaseCounter] = useState(0);
   const [isFirstStart, setIsFirstStart] = useState(true);
+  const { play } = useSoundStore();
 
   // New states for workout results
   const [showResults, setShowResults] = useState(false);
@@ -73,6 +75,9 @@ export default function WorkoutMonitoringComponent({
 
   // Handle workout completion - uses data from measurementDataRef
   const handleWorkoutComplete = useCallback(async () => {
+    // Play victory sound
+    play('timer_victory');
+
     // Convert the Map to a format suitable for API
     const measurementsData = Array.from(measurementDataRef.current.entries()).map(
       ([sequence, data]) => ({
@@ -107,7 +112,7 @@ export default function WorkoutMonitoringComponent({
       console.error('Error saving workout:', error);
       alert('Failed to save workout. Please try again.');
     }
-  }, [bodyWeight, workoutType.name]);
+  }, [bodyWeight, workoutType.name, play]);
 
   const exitWorkout = () => {
     if (onWorkoutExit) {
