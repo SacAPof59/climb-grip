@@ -35,7 +35,8 @@ export default function WorkoutMonitoringComponent({
   const [phaseCounter, setPhaseCounter] = useState(0);
   const [isFirstStart, setIsFirstStart] = useState(true);
   const { play } = useSoundStore();
-
+  const [maxIsoForce, setMaxIsoForce] = useState<number>(0);
+  const [workoutCompleted, setWorkoutCompleted] = useState(false);
   // New states for workout results
   const [showResults, setShowResults] = useState(false);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
@@ -88,6 +89,18 @@ export default function WorkoutMonitoringComponent({
 
     setProcessedMeasurements(measurementsData);
 
+    // Calculate maxIsoForce if this is a maxIsoFS workout
+    let calculatedMaxIsoForce = 0;
+    if (workoutType.isMaxIsoFS) {
+      measurementsData.forEach(seqData => {
+        if (seqData.data.length > 0) {
+          const sum = seqData.data.reduce((acc, point) => acc + point.weight, 0);
+          const avgForce = sum / seqData.data.length;
+          calculatedMaxIsoForce = Math.max(calculatedMaxIsoForce, avgForce);
+        }
+      });
+    }
+
     try {
       const response = await fetch('/api/workout', {
         method: 'POST',
@@ -106,13 +119,18 @@ export default function WorkoutMonitoringComponent({
       }
 
       const result = await response.json();
-      setWorkoutId(result.workoutId);
-      setShowResults(true);
+      if (result.workoutId) {
+        setWorkoutId(result.workoutId);
+        if (workoutType.isMaxIsoFS) {
+          setMaxIsoForce(calculatedMaxIsoForce);
+        }
+        setShowResults(true);
+      }
     } catch (error) {
       console.error('Error saving workout:', error);
       alert('Failed to save workout. Please try again.');
     }
-  }, [bodyWeight, workoutType.name, play]);
+  }, [bodyWeight, workoutType.name, workoutType.isMaxIsoFS, play]);
 
   const exitWorkout = () => {
     if (onWorkoutExit) {
@@ -169,40 +187,29 @@ export default function WorkoutMonitoringComponent({
 
   // Main workout timer effect
   useEffect(() => {
-    console.log('Workout timer effect running');
     if (!isRunning || isCountdownActive) return;
 
     const timerInterval = setInterval(() => {
       setCurrentTime(prev => {
-        console.log('Current sequence:', currentSequence);
-        console.log('Interval running, current time:', prev);
         const newTime = prev - 1;
 
         if (newTime <= 0) {
           // Move to next sequence
           const nextSequence = currentSequence + 1;
-          console.log('Next sequence:', nextSequence);
           if (nextSequence < workoutType?.workoutTypeSequences?.length + 1) {
             const sequence = workoutType.workoutTypeSequences[nextSequence - 1];
-            console.log('Sequence:', sequence);
-
             setCurrentSequence(nextSequence);
             setMaxTime(sequence.duration);
             setPhaseType(mapSequenceTypeToPhaseType(sequence.sequenceType));
-            setPhaseCounter(prev => {
-              const newCounter = prev + 1;
-              return newCounter;
-            });
-
+            setPhaseCounter(prev => prev + 1);
             return sequence.duration;
           } else {
             // Workout complete
             setIsRunning(false);
-            handleWorkoutComplete();
+            setWorkoutCompleted(true);
+            return 0;
           }
-          return 0;
         }
-
         return newTime;
       });
     }, 1000);
@@ -212,6 +219,12 @@ export default function WorkoutMonitoringComponent({
       clearInterval(timerInterval);
     };
   }, [isRunning, isCountdownActive, currentSequence, workoutType.workoutTypeSequences]);
+
+  useEffect(() => {
+    if (workoutCompleted) {
+      handleWorkoutComplete();
+    }
+  }, [workoutCompleted, handleWorkoutComplete]);
 
   // Toggle play/pause
   const togglePlayPause = () => {
@@ -233,6 +246,7 @@ export default function WorkoutMonitoringComponent({
         measurementsData={processedMeasurements}
         workoutSequences={workoutType.workoutTypeSequences}
         maxWeight={maxWeight}
+        maxIsoForce={workoutType.isMaxIsoFS ? maxIsoForce : undefined}
       />
     );
   }

@@ -23,6 +23,7 @@ interface WorkoutType {
   name: string;
   description: string | null;
   workoutTypeSequences: WorkoutTypeSequence[];
+  isMaxIsoFS: boolean;
 }
 
 export default function WorkoutRunningPage() {
