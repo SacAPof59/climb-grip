@@ -18,6 +18,9 @@ export default function SoundPreloader() {
     if (!sounds['timer_end']) {
       loadSound('timer_end', '/sound/timer_end.mp3');
     }
+    if (!sounds['timer_victory']) {
+      loadSound('timer_victory', '/sound/timer_victory.mp3');
+    }
     console.log('Sounds loaded:', sounds);
   }, [loadSound, sounds]);
 
