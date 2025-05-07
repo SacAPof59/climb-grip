@@ -1,7 +1,7 @@
 'use client';
 
-import { Clock, Calendar, Award } from 'lucide-react';
-import WeightChartComponent from '@/app/components/dataviz/WeightChartComponent';
+import { Clock, Award } from 'lucide-react';
+import BodyWeightPercentChartComponent from '@/app/components/dataviz/BodyWeightPercentChartComponent';
 
 interface WorkoutResultCardProps {
   workoutId: string;
@@ -9,7 +9,11 @@ interface WorkoutResultCardProps {
   measurementsData: Array<{ sequence: number; data: MeasuredData[] }>;
   workoutSequences: WorkoutTypeSequence[];
   maxWeight: number;
+  bodyWeight: number;
   maxIsoForce?: number;
+  criticalForce?: number;
+  maxForceForCF?: number;
+  wPrime?: number;
 }
 
 export default function WorkoutResultCard({
@@ -18,10 +22,14 @@ export default function WorkoutResultCard({
   measurementsData,
   workoutSequences,
   maxWeight,
+  bodyWeight,
   maxIsoForce,
+  criticalForce,
+  maxForceForCF,
+  wPrime,
 }: WorkoutResultCardProps) {
   // Format current date
-  const currentDate = new Date().toLocaleDateString('en-GB', {
+  const currentDate = new Date().toLocaleDateString('fr-FR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -83,35 +91,66 @@ export default function WorkoutResultCard({
 
   return (
     <div className="bg-base-100 rounded-xl shadow-lg p-6" data-workout-id={workoutId}>
-      <h3 className="text-xl font-semibold">{workoutName}</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold">{workoutName}</h3>
+        <div className="badge badge-neutral">{currentDate}</div>
+      </div>
 
-      <div className="mt-4 mb-6">
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5 text-primary" />
-            <span>{currentDate}</span>
-          </div>
-          <div className="flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-primary" />
-            <span>{totalEffortTime} seconds</span>
-          </div>
-          <div className="flex items-center">
-            <Award className="mr-2 h-5 w-5 text-primary" />
-            <span>{maxWeight.toFixed(1)} kg</span>
-          </div>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="flex items-center">
+          <Clock className="mr-2 h-5 w-5 text-primary" />
+          <span>{totalEffortTime} seconds</span>
         </div>
+        <div className="flex items-center">
+          <Award className="mr-2 h-5 w-5 text-primary" />
+          <span>{maxWeight.toFixed(1)} kg</span>
+        </div>
+      </div>
 
-        {/* Add max isometrics strength if available */}
+      {/* Stats container with centering */}
+      <div className="flex flex-col items-center gap-4 mb-6">
+        {/* Max isometrics strength stat */}
         {maxIsoForce && (
-          <div className="mt-2 flex items-center">
-            <div className="badge badge-primary mr-2">Max Isometrics</div>
-            <span className="font-semibold">{maxIsoForce.toFixed(1)} kg</span>
+          <div className="stat bg-base-200 rounded-box w-full max-w-md">
+            <div className="stat-title">Max Isometrics</div>
+            <div className="stat-value text-primary">
+              {((maxIsoForce / bodyWeight) * 100).toFixed(0)}%
+            </div>
+            <div className="stat-desc">{maxIsoForce.toFixed(1)} kg</div>
+          </div>
+        )}
+
+        {/* Critical force stats */}
+        {criticalForce && (
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-md">
+            {/* Main Critical Force stat */}
+            <div className="stat bg-base-200 rounded-box flex-1">
+              <div className="stat-title">Critical Force</div>
+              <div className="stat-value text-secondary">
+                {((criticalForce / bodyWeight) * 100).toFixed(2)}%
+              </div>
+              <div className="stat-desc">
+                {criticalForce.toFixed(1)} kg
+                {wPrime && <> | W&apos;: {wPrime.toFixed(1)} J</>}
+              </div>
+            </div>
+
+            {/* Max Force for CF as a separate stat */}
+            {maxForceForCF && (
+              <div className="stat bg-base-200 rounded-box flex-none">
+                <div className="stat-title">Max Force</div>
+                <div className="stat-value text-accent text-2xl">
+                  {((maxForceForCF / bodyWeight) * 100).toFixed(2)}%
+                </div>
+                <div className="stat-desc">{maxForceForCF.toFixed(1)} kg</div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       <div className="h-64 mb-4">
-        <WeightChartComponent labels={labels} data={data} />
+        <BodyWeightPercentChartComponent labels={labels} data={data} bodyWeight={bodyWeight} />
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ interface WorkoutType {
   description: string | null;
   workoutTypeSequences: WorkoutTypeSequence[];
   isMaxIsoFS: boolean;
+  isCriticalForce: boolean; // Add this missing property
 }
 
 export default function WorkoutRunningPage() {

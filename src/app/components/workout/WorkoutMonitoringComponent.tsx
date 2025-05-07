@@ -36,8 +36,10 @@ export default function WorkoutMonitoringComponent({
   const [isFirstStart, setIsFirstStart] = useState(true);
   const { play } = useSoundStore();
   const [maxIsoForce, setMaxIsoForce] = useState<number>(0);
+  const [criticalForce, setCriticalForce] = useState<number>(0);
+  const [maxForceForCF, setMaxForceForCF] = useState<number>(0);
   const [workoutCompleted, setWorkoutCompleted] = useState(false);
-  // New states for workout results
+  // States for workout results
   const [showResults, setShowResults] = useState(false);
   const [workoutId, setWorkoutId] = useState<string | null>(null);
   const [maxWeight, setMaxWeight] = useState(0);
@@ -59,7 +61,7 @@ export default function WorkoutMonitoringComponent({
   const handleMeasurementUpdate = (measurementData: Map<number, MeasuredData[]>) => {
     measurementDataRef.current = measurementData;
 
-    // Update max weight
+    // Update max weight for display only
     let currentMax = maxWeight;
     measurementData.forEach(dataPoints => {
       dataPoints.forEach(point => {
@@ -89,18 +91,6 @@ export default function WorkoutMonitoringComponent({
 
     setProcessedMeasurements(measurementsData);
 
-    // Calculate maxIsoForce if this is a maxIsoFS workout
-    let calculatedMaxIsoForce = 0;
-    if (workoutType.isMaxIsoFS) {
-      measurementsData.forEach(seqData => {
-        if (seqData.data.length > 0) {
-          const sum = seqData.data.reduce((acc, point) => acc + point.weight, 0);
-          const avgForce = sum / seqData.data.length;
-          calculatedMaxIsoForce = Math.max(calculatedMaxIsoForce, avgForce);
-        }
-      });
-    }
-
     try {
       const response = await fetch('/api/workout', {
         method: 'POST',
@@ -121,16 +111,33 @@ export default function WorkoutMonitoringComponent({
       const result = await response.json();
       if (result.workoutId) {
         setWorkoutId(result.workoutId);
-        if (workoutType.isMaxIsoFS) {
-          setMaxIsoForce(calculatedMaxIsoForce);
+
+        // Fetch the processed workout data to display the calculated values
+        const workoutResponse = await fetch(`/api/workout?workoutId=${result.workoutId}`);
+        if (workoutResponse.ok) {
+          const workoutData = await workoutResponse.json();
+          const workout = workoutData.workoutResults?.[0];
+
+          if (workout) {
+            // Set values from server calculations
+            if (workoutType.isMaxIsoFS && workout.maxIsoForce) {
+              setMaxIsoForce(workout.maxIsoForce);
+            }
+
+            if (workoutType.isCriticalForce) {
+              if (workout.criticalForce) setCriticalForce(workout.criticalForce);
+              if (workout.maxForceForCF) setMaxForceForCF(workout.maxForceForCF);
+            }
+          }
         }
+
         setShowResults(true);
       }
     } catch (error) {
       console.error('Error saving workout:', error);
       alert('Failed to save workout. Please try again.');
     }
-  }, [bodyWeight, workoutType.name, workoutType.isMaxIsoFS, play]);
+  }, [bodyWeight, workoutType.name, workoutType.isMaxIsoFS, workoutType.isCriticalForce, play]);
 
   const exitWorkout = () => {
     if (onWorkoutExit) {
@@ -246,7 +253,10 @@ export default function WorkoutMonitoringComponent({
         measurementsData={processedMeasurements}
         workoutSequences={workoutType.workoutTypeSequences}
         maxWeight={maxWeight}
+        bodyWeight={bodyWeight ?? 0}
         maxIsoForce={workoutType.isMaxIsoFS ? maxIsoForce : undefined}
+        criticalForce={workoutType.isCriticalForce ? criticalForce : undefined}
+        maxForceForCF={workoutType.isCriticalForce ? maxForceForCF : undefined}
       />
     );
   }
