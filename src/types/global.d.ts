@@ -101,6 +101,7 @@ interface WorkoutType {
   description: string | null;
   workoutTypeSequences: WorkoutTypeSequence[];
   isMaxIsoFS: boolean;
+  isCriticalForce: boolean;
 }
 
 interface MeasuredData {

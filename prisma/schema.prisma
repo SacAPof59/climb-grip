@@ -120,15 +120,17 @@ model WorkoutTypeSequence {
 }
 
 model Workout {
-  id           String        @id @default(uuid())
-  workoutName  String        @map("workout_name")
-  climberId    String        @map("climber_id")
-  bodyWeight   Float?        @map("body_weight")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  measurements Measurement[]
-  climber      Climber       @relation(fields: [climberId], references: [id])
-  workoutType  WorkoutType   @relation(fields: [workoutName], references: [name])
+  id                   String                @id @default(uuid())
+  workoutName          String                @map("workout_name")
+  climberId            String                @map("climber_id")
+  bodyWeight           Float?                @map("body_weight")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  measurements         Measurement[]
+  climber              Climber               @relation(fields: [climberId], references: [id])
+  workoutType          WorkoutType           @relation(fields: [workoutName], references: [name])
+  MaxIsoFingerStrength MaxIsoFingerStrength?
+  CriticalForceWorkout CriticalForceWorkout?
 
   @@map("workout")
 }
@@ -154,21 +156,21 @@ model Calibration {
 }
 
 model Measurement {
-  id                  String                @id @default(uuid())
-  workoutId           String                @map("workout_id")
+  id                  String             @id @default(uuid())
+  workoutId           String             @map("workout_id")
   sequence            Int
-  sequenceType        SequenceType          @map("sequence_type")
+  sequenceType        SequenceType       @map("sequence_type")
   duration            Int
-  measurementDeviceId String?               @map("measurement_device_id")
-  measurementRate     Int                   @map("measurement_rate")
-  currentRepetition   Int                   @map("current_repetition")
-  createdAt           DateTime              @default(now()) @map("created_at")
-  updatedAt           DateTime              @updatedAt @map("updated_at")
-  criticalForce       CriticalForceWorkout?
-  maxIsoFS            MaxIsoFingerStrength?
+  measurementDeviceId String?            @map("measurement_device_id")
+  measurementRate     Int                @map("measurement_rate")
+  currentRepetition   Int                @map("current_repetition")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
   measuredData        MeasuredData[]
-  measurementDevice   MeasurementDevice?    @relation(fields: [measurementDeviceId], references: [id])
-  workout             Workout               @relation(fields: [workoutId], references: [id])
+  averageWeight       Float?             @map("average_weight")
+  maxWeight           Float?             @map("max_weight")
+  measurementDevice   MeasurementDevice? @relation(fields: [measurementDeviceId], references: [id])
+  workout             Workout            @relation(fields: [workoutId], references: [id])
 
   @@map("measurement")
 }
@@ -184,21 +186,21 @@ model MeasuredData {
 }
 
 model MaxIsoFingerStrength {
-  id            String      @id @default(uuid())
-  measurementId String      @unique @map("measurement_id")
-  maxForce      Float       @map("max_force")
-  measurement   Measurement @relation(fields: [measurementId], references: [id])
+  id        String  @id @default(uuid())
+  workoutId String  @unique @map("workout_id")
+  maxForce  Float   @map("max_force")
+  workout   Workout @relation(fields: [workoutId], references: [id])
 
   @@map("max_iso_finger_strength_workout")
 }
 
 model CriticalForceWorkout {
-  id            String      @id @default(uuid())
-  measurementId String      @unique @map("measurement_id")
-  criticalForce Float       @map("critical_force")
-  wPrime        Float       @map("w_prime")
-  maxForce      Float       @map("max_force")
-  measurement   Measurement @relation(fields: [measurementId], references: [id])
+  id            String  @id @default(uuid())
+  workoutId     String  @unique @map("workout_id")
+  criticalForce Float   @map("critical_force")
+  wPrime        Float   @map("w_prime")
+  maxForce      Float   @map("max_force")
+  workout       Workout @relation(fields: [workoutId], references: [id])
 
   @@map("critical_force_workout")
 }
